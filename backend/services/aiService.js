@@ -1,13 +1,13 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenAI } = require('@google/genai');
 
 // Retrieve API key from environment
 const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey || apiKey === 'mock-api-key-for-phase-1') {
-  console.warn('Warning: GEMINI_API_KEY is not defined or is set to a mock value.');
+if (!apiKey) {
+  console.warn('Warning: GEMINI_API_KEY is not defined in the environment.');
 }
 
-// Initialize the Gemini client
-const genAI = new GoogleGenerativeAI(apiKey || 'dummy-key');
+// Initialize the GoogleGenAI client
+const ai = new GoogleGenAI({ apiKey: apiKey || 'dummy-key' });
 
 /**
  * Generates structured JSON output from Gemini using a prompt, system prompt, and schema.
@@ -19,26 +19,22 @@ const genAI = new GoogleGenerativeAI(apiKey || 'dummy-key');
  */
 async function generateStructuredOutput({ prompt, systemPrompt, outputSchema }) {
   try {
-    const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
-    
-    // Retrieve model with system instructions
-    const model = genAI.getGenerativeModel({
+    const modelName = process.env.GEMINI_MODEL || 'gemini-3.7-flash';
+
+    // Call ai.models.generateContent matching modern unified SDK conventions
+    const response = await ai.models.generateContent({
       model: modelName,
-      systemInstruction: systemPrompt,
+      contents: prompt,
+      config: {
+        systemInstruction: systemPrompt,
+        responseMimeType: 'application/json',
+        responseSchema: outputSchema,
+        temperature: 0.1, // Low temperature for high consistency and structure adherence
+      }
     });
 
-    const generationConfig = {
-      responseMimeType: 'application/json',
-      responseSchema: outputSchema,
-      temperature: 0.1, // Low temperature for higher consistency and structure adherence
-    };
-
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig,
-    });
-
-    const responseText = result.response.text();
+    // In the new @google/genai SDK, output text is accessed via the .text property
+    const responseText = response.text;
     
     // Parse the response safely
     let parsedResult;
