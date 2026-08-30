@@ -3,6 +3,8 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const workflowRoutes = require('./routes/workflowRoutes');
+const executionRoutes = require('./routes/executionRoutes');
+
 
 // Load environment variables from .env
 dotenv.config();
@@ -41,6 +43,7 @@ app.get('/api/health', (req, res) => {
 
 // Routes
 app.use('/api/workflows', workflowRoutes);
+app.use('/api/executions', executionRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

@@ -43,6 +43,13 @@ export const workflowApi = {
   getById: (id) => apiRequest(`/workflows/${id}`),
 };
 
+export const executionApi = {
+  execute: (workflowId, inputs) => apiRequest(`/executions/${workflowId}`, {
+    method: 'POST',
+    body: { inputs }
+  }),
+};
+
 export const healthApi = {
   check: () => apiRequest('/health'),
 };
