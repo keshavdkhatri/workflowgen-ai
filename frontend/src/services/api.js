@@ -45,6 +45,26 @@ export const workflowApi = {
     method: 'POST',
     body: workflowData
   }),
+  extractPdf: (file) => {
+    const formData = new FormData();
+    formData.append('pdf', file);
+    
+    return fetch(`${API_URL}/workflows/extract-pdf`, {
+      method: 'POST',
+      body: formData
+    }).then(async (response) => {
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        data = null;
+      }
+      if (!response.ok) {
+        throw new Error((data && data.error) || `File upload failed (Status ${response.status})`);
+      }
+      return data;
+    });
+  }
 };
 
 export const executionApi = {

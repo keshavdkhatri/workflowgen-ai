@@ -442,7 +442,11 @@ export default function CustomWorkflowBuilder({ onWorkflowCreated }) {
 
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', fontWeight: '600', fontSize: '0.85rem', marginBottom: '6px', color: '#475569' }}>
-              Prompt Template (Dynamic variables must be wrapped in double brackets, e.g., <code style={{ backgroundColor: '#f1f5f9', padding: '2px 4px', borderRadius: '4px' }}>{"{{sourceText}}"}</code>) <span style={{ color: 'var(--color-danger)' }}>*</span>
+              Prompt Template <span style={{ color: 'var(--color-danger)' }}>*</span>
+              <span style={{ display: 'block', fontWeight: 'normal', color: '#64748b', fontSize: '0.75rem', marginTop: '4px', lineHeight: '1.4' }}>
+                Use <code>{"{{fieldName}}"}</code> to insert an input variable. Example:<br/>
+                <span style={{ fontFamily: 'monospace', backgroundColor: '#f1f5f9', padding: '2px 4px', borderRadius: '4px' }}>Summarize the following:<br/>{"{{sourceText}}"}</span>
+              </span>
             </label>
             <textarea
               value={promptTemplate}
@@ -466,13 +470,18 @@ export default function CustomWorkflowBuilder({ onWorkflowCreated }) {
 
           {/* JSON Schema Output */}
           <div style={{ marginBottom: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-              <label style={{ display: 'block', fontWeight: '600', fontSize: '0.85rem', color: '#475569', margin: '0' }}>
-                Expected Output JSON Schema <span style={{ color: 'var(--color-danger)' }}>*</span>
-              </label>
-              <div style={{ color: '#94a3b8', cursor: 'help', display: 'inline-flex' }} title='Define the structure of the JSON output using standard openAPI schema. Root must be type "OBJECT" with a "properties" definition.'>
-                <Info size={14} />
+            <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <label style={{ display: 'block', fontWeight: '600', fontSize: '0.85rem', color: '#475569', margin: '0' }}>
+                  Expected Output JSON Schema <span style={{ color: 'var(--color-danger)' }}>*</span>
+                </label>
+                <div style={{ color: '#94a3b8', cursor: 'help', display: 'inline-flex' }} title='Define the structure of the JSON output using standard openAPI schema. Root must be type "OBJECT" with a "properties" definition.'>
+                  <Info size={14} />
+                </div>
               </div>
+              <span style={{ display: 'block', fontWeight: 'normal', color: '#64748b', fontSize: '0.75rem', marginTop: '4px' }}>
+                Define the JSON structure Gemini should return.
+              </span>
             </div>
             <textarea
               value={outputSchemaText}

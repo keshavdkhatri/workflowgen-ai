@@ -64,7 +64,7 @@ export default function Dashboard({ workflowsCount, onNavigate }) {
             <div style={{ fontSize: '1.75rem', fontWeight: '700' }}>
               {loading ? '...' : workflowsCount}
             </div>
-            <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '500' }}>Active Workflows</div>
+            <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '500' }}>Available Workflows</div>
           </div>
         </div>
 

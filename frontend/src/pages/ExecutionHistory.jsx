@@ -12,6 +12,8 @@ export default function ExecutionHistory() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState(null);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [filterWorkflow, setFilterWorkflow] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
 
   const fetchHistory = async () => {
     setLoading(true);
@@ -125,11 +127,19 @@ export default function ExecutionHistory() {
     document.body.removeChild(link);
   };
 
-  // Helper formatting utils
   const formatDuration = (ms) => {
     if (ms === undefined || ms === null) return '-';
     if (ms < 1000) return `${ms}ms`;
-    return `${(ms / 1000).toFixed(2)}s`;
+    const totalSecs = Math.round(ms / 1000);
+    if (totalSecs < 60) {
+      return `${totalSecs}s`;
+    }
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
+    if (secs === 0) {
+      return `${mins}m`;
+    }
+    return `${mins}m ${secs}s`;
   };
 
   const formatDate = (dateStr) => {
@@ -248,7 +258,15 @@ export default function ExecutionHistory() {
         )}
       </div>
     );
-  }
+  };
+
+  const uniqueWorkflows = Array.from(new Set(history.map(item => item.workflowName)));
+
+  const filteredHistory = history.filter(item => {
+    const matchWorkflow = filterWorkflow === 'all' || item.workflowName === filterWorkflow;
+    const matchStatus = filterStatus === 'all' || item.status === filterStatus;
+    return matchWorkflow && matchStatus;
+  });
 
   // Render list view
   return (
@@ -263,6 +281,37 @@ export default function ExecutionHistory() {
           <AlertTriangle size={18} />
           <div>
             <strong>Error:</strong> {error}
+          </div>
+        </div>
+      )}
+
+      {/* Filters section */}
+      {!loading && history.length > 0 && (
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#64748b', marginBottom: '4px' }}>Workflow Template</label>
+            <select
+              value={filterWorkflow}
+              onChange={(e) => setFilterWorkflow(e.target.value)}
+              style={{ padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: '6px', fontSize: '0.85rem', backgroundColor: 'white' }}
+            >
+              <option value="all">All Workflows</option>
+              {uniqueWorkflows.map(name => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#64748b', marginBottom: '4px' }}>Execution Status</label>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              style={{ padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: '6px', fontSize: '0.85rem', backgroundColor: 'white' }}
+            >
+              <option value="all">All Statuses</option>
+              <option value="success">Success</option>
+              <option value="failed">Failed</option>
+            </select>
           </div>
         </div>
       )}
@@ -282,6 +331,10 @@ export default function ExecutionHistory() {
             You haven't run any workflows yet. Select a template from the Workflow Library to generate documents and build history.
           </p>
         </div>
+      ) : filteredHistory.length === 0 ? (
+        <div style={{ padding: '32px', textAlign: 'center', border: '1px dashed var(--color-border)', borderRadius: '8px', color: '#64748b', fontSize: '0.9rem', backgroundColor: 'white' }}>
+          No executions match the selected filters.
+        </div>
       ) : (
         <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
           <div style={{ overflowX: 'auto' }}>
@@ -296,7 +349,7 @@ export default function ExecutionHistory() {
                 </tr>
               </thead>
               <tbody>
-                {history.map((item) => (
+                {filteredHistory.map((item) => (
                   <tr key={item._id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.2s' }} className="table-row-hover">
                     
                     {/* Workflow Name */}

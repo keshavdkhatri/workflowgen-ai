@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Play, Copy, Download, RefreshCw, AlertTriangle, FileText, Check } from 'lucide-react';
-import { executionApi } from '../services/api';
+import { ArrowLeft, Play, Copy, Download, RefreshCw, AlertTriangle, FileText, Check, Upload } from 'lucide-react';
+import { executionApi, workflowApi } from '../services/api';
 import StructuredResult from '../components/StructuredResult';
 
 export default function WorkflowExecution({ workflow, onBack }) {
@@ -13,11 +13,15 @@ export default function WorkflowExecution({ workflow, onBack }) {
   const [validationErrors, setValidationErrors] = useState({});
   const [copySuccess, setCopySuccess] = useState(false);
 
+  // PDF states
+  const [pdfFiles, setPdfFiles] = useState({});
+  const [pdfUploading, setPdfUploading] = useState({});
+  const [pdfErrors, setPdfErrors] = useState({});
+
   // Initialize input state with defaults if applicable
   useEffect(() => {
     const initialInputs = {};
     workflow.inputSchema.forEach(field => {
-      // Set defaults for selects if provided
       if (field.type === 'select' && field.options && field.options.length > 0) {
         initialInputs[field.name] = field.options[0];
       } else {
@@ -28,6 +32,9 @@ export default function WorkflowExecution({ workflow, onBack }) {
     setOutput(null);
     setError(null);
     setValidationErrors({});
+    setPdfFiles({});
+    setPdfUploading({});
+    setPdfErrors({});
   }, [workflow]);
 
   const handleInputChange = (fieldName, value) => {
@@ -35,7 +42,6 @@ export default function WorkflowExecution({ workflow, onBack }) {
       ...prev,
       [fieldName]: value
     }));
-    // Clear validation error when user types
     if (validationErrors[fieldName]) {
       setValidationErrors(prev => ({
         ...prev,
@@ -46,6 +52,59 @@ export default function WorkflowExecution({ workflow, onBack }) {
 
   const handleOutputChange = (updatedOutput) => {
     setOutput(updatedOutput);
+  };
+
+  // PDF Handler
+  const handlePdfUpload = async (fieldName, file) => {
+    if (!file) return;
+
+    if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
+      setPdfErrors(prev => ({ ...prev, [fieldName]: 'Only PDF files are supported.' }));
+      return;
+    }
+
+    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_SIZE) {
+      setPdfErrors(prev => ({ ...prev, [fieldName]: 'PDF exceeds the maximum allowed size (10 MB).' }));
+      return;
+    }
+
+    if (file.size === 0) {
+      setPdfErrors(prev => ({ ...prev, [fieldName]: 'Selected file is empty.' }));
+      return;
+    }
+
+    setPdfErrors(prev => ({ ...prev, [fieldName]: null }));
+    setPdfUploading(prev => ({ ...prev, [fieldName]: true }));
+
+    try {
+      const result = await workflowApi.extractPdf(file);
+      if (result && result.text) {
+        setPdfFiles(prev => ({
+          ...prev,
+          [fieldName]: { name: file.name, originalText: inputs[fieldName] || '' }
+        }));
+        handleInputChange(fieldName, result.text);
+      } else {
+        throw new Error('No text returned from extraction.');
+      }
+    } catch (err) {
+      console.error(err);
+      setPdfErrors(prev => ({ ...prev, [fieldName]: err.message || 'Could not extract text from this PDF.' }));
+    } finally {
+      setPdfUploading(prev => ({ ...prev, [fieldName]: false }));
+    }
+  };
+
+  const handleRemovePdf = (fieldName) => {
+    const prevInfo = pdfFiles[fieldName];
+    setPdfFiles(prev => {
+      const updated = { ...prev };
+      delete updated[fieldName];
+      return updated;
+    });
+    setPdfErrors(prev => ({ ...prev, [fieldName]: null }));
+    handleInputChange(fieldName, prevInfo ? prevInfo.originalText : '');
   };
 
   const validateForm = () => {
@@ -86,7 +145,6 @@ export default function WorkflowExecution({ workflow, onBack }) {
     }
   };
 
-  // Convert Structured JSON to Markdown representation
   const getMarkdownOutput = () => {
     if (!output) return '';
     let md = `# ${workflow.name}\n\n`;
@@ -199,28 +257,137 @@ export default function WorkflowExecution({ workflow, onBack }) {
               const hasError = validationErrors[field.name];
               const isRequired = field.required;
 
+              // Check if a PDF is uploaded for this textarea field
+              const pdfInfo = pdfFiles[field.name];
+              const pdfErr = pdfErrors[field.name];
+
               return (
-                <div key={field.name} style={{ marginBottom: '20px' }}>
+                <div key={field.name} style={{ marginBottom: '25px' }}>
                   <label style={{ display: 'block', fontWeight: '600', fontSize: '0.85rem', marginBottom: '6px', color: '#475569' }}>
                     {field.label} {isRequired && <span style={{ color: 'var(--color-danger)' }}>*</span>}
                   </label>
                   
                   {field.type === 'textarea' ? (
-                    <textarea
-                      value={value}
-                      placeholder={field.placeholder}
-                      onChange={(e) => handleInputChange(field.name, e.target.value)}
-                      disabled={loading}
-                      style={{ 
-                        width: '100%', 
-                        padding: '10px', 
-                        border: `1px solid ${hasError ? 'var(--color-danger)' : 'var(--color-border)'}`, 
-                        borderRadius: '6px', 
-                        minHeight: '130px', 
-                        fontFamily: 'inherit', 
-                        fontSize: '0.9rem' 
-                      }}
-                    />
+                    <div>
+                      {/* PDF Upload Badge if active */}
+                      {pdfInfo ? (
+                        <div style={{ 
+                          padding: '12px 16px', 
+                          border: '1px solid #bae6fd', 
+                          backgroundColor: '#f0f9ff', 
+                          borderRadius: '8px', 
+                          marginBottom: '10px', 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center' 
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '1.25rem' }}>📄</span>
+                            <div>
+                              <div style={{ fontWeight: '600', color: '#0369a1', fontSize: '0.85rem', wordBreak: 'break-all' }}>
+                                {pdfInfo.name}
+                              </div>
+                              <div style={{ color: '#0284c7', fontSize: '0.75rem', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span> PDF ready (text extracted)
+                              </div>
+                            </div>
+                          </div>
+                          <button 
+                            type="button" 
+                            onClick={() => handleRemovePdf(field.name)} 
+                            style={{ 
+                              color: '#ef4444', 
+                              background: 'none', 
+                              border: 'none', 
+                              cursor: 'pointer', 
+                              fontSize: '0.8rem',
+                              fontWeight: '600',
+                              padding: '4px 8px'
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ) : (
+                        /* Drag and Drop area for PDF */
+                        <div 
+                          onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                              handlePdfUpload(field.name, e.dataTransfer.files[0]);
+                            }
+                          }}
+                          onClick={() => document.getElementById(`pdf-file-input-${field.name}`).click()}
+                          style={{
+                            border: '2px dashed #cbd5e1',
+                            borderRadius: '8px',
+                            padding: '16px',
+                            textAlign: 'center',
+                            backgroundColor: '#f8fafc',
+                            marginBottom: '8px',
+                            cursor: 'pointer',
+                            transition: 'border-color 0.2s ease',
+                          }}
+                        >
+                          <input
+                            id={`pdf-file-input-${field.name}`}
+                            type="file"
+                            accept=".pdf"
+                            onChange={(e) => handlePdfUpload(field.name, e.target.files[0])}
+                            style={{ display: 'none' }}
+                            disabled={loading || pdfUploading[field.name]}
+                          />
+                          <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>📄</div>
+                          <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#475569' }}>
+                            {pdfUploading[field.name] ? (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                <RefreshCw size={14} className="spinner" style={{ animation: 'spin 1s linear infinite' }} /> Extracting text...
+                              </span>
+                            ) : (
+                              'Drag & drop a PDF here or click to browse'
+                            )}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>
+                            PDF files only • Maximum size: 10 MB
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Helper errors for PDF */}
+                      {pdfErr && (
+                        <span style={{ color: 'var(--color-danger)', fontSize: '0.75rem', marginBottom: '10px', display: 'block' }}>
+                          {pdfErr}
+                        </span>
+                      )}
+
+                      {/* OR Divider if no PDF active */}
+                      {!pdfInfo && (
+                        <div style={{ textAlign: 'center', margin: '8px 0', fontSize: '0.8rem', color: '#94a3b8', fontWeight: '600' }}>
+                          — OR —
+                        </div>
+                      )}
+
+                      {/* Fallback Textarea */}
+                      <textarea
+                        value={value}
+                        placeholder={pdfInfo ? "Extracted PDF contents are ready for execution..." : field.placeholder}
+                        onChange={(e) => handleInputChange(field.name, e.target.value)}
+                        disabled={loading || !!pdfInfo}
+                        style={{ 
+                          width: '100%', 
+                          padding: '10px', 
+                          border: `1px solid ${hasError ? 'var(--color-danger)' : 'var(--color-border)'}`, 
+                          borderRadius: '6px', 
+                          minHeight: '130px', 
+                          fontFamily: 'inherit', 
+                          fontSize: '0.9rem',
+                          backgroundColor: pdfInfo ? '#f1f5f9' : 'white',
+                          color: pdfInfo ? '#64748b' : 'inherit'
+                        }}
+                      />
+                    </div>
                   ) : field.type === 'select' ? (
                     <select
                       value={value}

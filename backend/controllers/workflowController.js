@@ -1,4 +1,5 @@
 const Workflow = require('../models/Workflow');
+const pdfParse = require('pdf-parse');
 
 // Helper to slugify workflow name
 const slugify = (text) => {
@@ -123,6 +124,46 @@ exports.createCustomWorkflow = async (req, res, next) => {
     await newWorkflow.save();
     res.status(201).json({ success: true, data: newWorkflow });
 
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Extract text from uploaded PDF in-memory
+exports.extractPdfText = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Please select a PDF file.' });
+    }
+
+    if (req.file.mimetype !== 'application/pdf') {
+      return res.status(400).json({ error: 'Only PDF files are supported.' });
+    }
+
+    // Limit to 10MB
+    const MAX_SIZE = 10 * 1024 * 1024;
+    if (req.file.size > MAX_SIZE) {
+      return res.status(400).json({ error: 'PDF exceeds the maximum allowed size (10 MB).' });
+    }
+
+    if (req.file.size === 0) {
+      return res.status(400).json({ error: 'Uploaded file is empty.' });
+    }
+
+    try {
+      const parser = new pdfParse.PDFParse(new Uint8Array(req.file.buffer));
+      const data = await parser.getText();
+      const cleanText = data.text ? data.text.replace(/\0/g, '').trim() : '';
+
+      if (!cleanText) {
+        return res.status(400).json({ error: 'Could not extract readable text from this PDF (it may be image-only or scanned).' });
+      }
+
+      return res.status(200).json({ text: cleanText });
+    } catch (parseError) {
+      console.error('pdf-parse failed:', parseError);
+      return res.status(400).json({ error: 'Could not extract readable text from this PDF.' });
+    }
   } catch (error) {
     next(error);
   }
