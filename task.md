@@ -1,0 +1,24 @@
+# WorkflowGen AI - Phase 1 Task List
+
+- `[x]` Backend Foundation Setup
+  - `[x]` Create `backend/package.json` with dependencies (express, mongoose, dotenv, cors) and scripts (start, seed)
+  - `[x]` Create `backend/.env.example`
+  - `[x]` Create `backend/config/db.js` for MongoDB connection
+  - `[x]` Create `backend/models/Workflow.js` Mongoose model
+  - `[x]` Write seeding script `backend/scripts/seed.js` for 5 system workflows
+  - `[x]` Implement `backend/controllers/workflowController.js` and routing
+  - `[x]` Create main entry `backend/server.js` with CORS, errors, and `/api/health`
+- `[x]` Frontend Foundation Setup
+  - `[x]` Create `frontend/package.json` with React, Vite, and standard Tailwind/CSS packages
+  - `[x]` Create `frontend/vite.config.js` and `frontend/index.html`
+  - `[x]` Create `frontend/src/index.css` (basic reset and styling rules)
+  - `[x]` Create `frontend/src/main.jsx` and `frontend/src/App.jsx` with routes
+  - `[x]` Create `frontend/src/services/api.js` using native fetch
+- `[x]` Workflow Library UI
+  - `[x]` Create layout components (`Layout.jsx` with Sidebar/Navbar)
+  - `[x]` Implement `WorkflowLibrary.jsx` showing dynamically fetched workflow cards
+  - `[x]` Support temporary navigation to a stubbed out Workflow Execution screen on "Use Workflow" click
+- `[x]` Run and Verify Phase 1
+  - `[x]` Verify backend runs successfully and seeds the database
+  - `[x]` Verify endpoints `/api/health`, `/api/workflows`, and `/api/workflows/:id` work
+  - `[x]` Verify frontend builds and displays the active workflow cards from backend
