@@ -365,3 +365,54 @@ body {
 .db-alert button:hover {
   background-color: rgba(146, 64, 14, 0.1);
 }
+
+.table-row-hover:hover {
+  background-color: #f8fafc;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+  }
+  .sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid #1e293b;
+  }
+  .sidebar-brand {
+    padding: 16px 20px;
+    justify-content: center;
+  }
+  .sidebar-menu {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 10px;
+    gap: 8px;
+  }
+  .menu-item {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    width: auto;
+    justify-content: center;
+  }
+  .sidebar > div:last-child {
+    display: none;
+  }
+  .main-content {
+    margin-left: 0;
+  }
+  .header {
+    padding: 0 16px;
+    justify-content: center;
+  }
+  .page-container {
+    padding: 16px;
+  }
+  .grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+}

@@ -44,7 +44,7 @@ export default function Layout({ children, currentTab, setCurrentTab, dbStatus, 
           </ul>
         </nav>
         <div style={{ padding: '20px', borderTop: '1px solid #1e293b', fontSize: '0.8rem', color: '#64748b' }}>
-          v1.0.0 (Phase 1)
+          v1.0.0 (Demo Ready)
         </div>
       </aside>
 
