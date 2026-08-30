@@ -42,17 +42,21 @@ export default function WorkflowLibrary({ workflows, onSelectWorkflow }) {
           {workflows.map((wf) => (
             <div className="card" key={wf.id}>
               <div>
-                <div className="card-header">
+                <div className="card-header" style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   <span className={`category-badge ${getCategoryClass(wf.category)}`}>
                     {wf.category}
                   </span>
-                  {wf.isCustom && (
-                    <span className="category-badge badge-custom" style={{ marginLeft: '6px' }}>
+                  {wf.isCustom ? (
+                    <span className="category-badge" style={{ backgroundColor: '#fff1f2', color: '#f43f5e', border: '1px solid #fecdd3' }}>
                       Custom
+                    </span>
+                  ) : (
+                    <span className="category-badge" style={{ backgroundColor: '#f0f9ff', color: '#0284c7', border: '1px solid #bae6fd' }}>
+                      Built-in
                     </span>
                   )}
                 </div>
-                <h3 className="card-title">{wf.name}</h3>
+                <h3 className="card-title" style={{ marginTop: '8px' }}>{wf.name}</h3>
                 <p className="card-description">{wf.description}</p>
                 
                 <div className="card-metadata">

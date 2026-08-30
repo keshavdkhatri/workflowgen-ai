@@ -119,7 +119,14 @@ export default function App() {
           />
         );
       case 'builder':
-        return <CustomWorkflowBuilder />;
+        return (
+          <CustomWorkflowBuilder 
+            onWorkflowCreated={async () => {
+              await initApp();
+              setCurrentTab('library');
+            }} 
+          />
+        );
       case 'history':
         return <ExecutionHistory />;
       case 'insights':

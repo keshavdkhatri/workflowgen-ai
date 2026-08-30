@@ -4,5 +4,6 @@ const workflowController = require('../controllers/workflowController');
 
 router.get('/', workflowController.getAllWorkflows);
 router.get('/:id', workflowController.getWorkflowById);
+router.post('/', workflowController.createCustomWorkflow);
 
 module.exports = router;

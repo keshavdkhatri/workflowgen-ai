@@ -4,6 +4,8 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const workflowRoutes = require('./routes/workflowRoutes');
 const executionRoutes = require('./routes/executionRoutes');
+const executionHistoryRoutes = require('./routes/executionHistoryRoutes');
+const insightRoutes = require('./routes/insightRoutes');
 
 
 const app = express();
@@ -40,7 +42,9 @@ app.get('/api/health', (req, res) => {
 
 // Routes
 app.use('/api/workflows', workflowRoutes);
+app.use('/api/executions', executionHistoryRoutes);
 app.use('/api/executions', executionRoutes);
+app.use('/api/insights', insightRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

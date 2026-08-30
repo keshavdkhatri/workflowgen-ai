@@ -41,6 +41,10 @@ async function apiRequest(endpoint, options = {}) {
 export const workflowApi = {
   getAll: () => apiRequest('/workflows'),
   getById: (id) => apiRequest(`/workflows/${id}`),
+  createCustom: (workflowData) => apiRequest('/workflows', {
+    method: 'POST',
+    body: workflowData
+  }),
 };
 
 export const executionApi = {
@@ -48,6 +52,16 @@ export const executionApi = {
     method: 'POST',
     body: { inputs }
   }),
+  getHistory: (workflowId = '') => apiRequest(`/executions${workflowId ? `?workflowId=${workflowId}` : ''}`),
+  getById: (id) => apiRequest(`/executions/${id}`),
+};
+
+export const insightsApi = {
+  analyze: (processData) => apiRequest('/insights', {
+    method: 'POST',
+    body: processData
+  }),
+  getStats: () => apiRequest('/insights/stats'),
 };
 
 export const healthApi = {
